@@ -10,12 +10,10 @@
 //
 // these are the options that i will implement (i hope)
 uint8_t options(int argc, char *argv[]){
-    int i;
     int c;
     uint8_t opts = 0;
     uint8_t l = 1, s = 2, a = 4, r = 8, I = 16, t = 32, R = 64;
-    while((c = getopt(argc, argv, "lsaritR") != 0)){
-        printf("%d\n", c);
+    while((c = getopt(argc,argv, "lsaritR")) != -1){
         switch (c) {
             case 'l':
                 opts += l;
@@ -29,7 +27,7 @@ uint8_t options(int argc, char *argv[]){
             case 'r':
                 opts += r;
                 break;
-            case 'I':
+            case 'i':
                 opts += I;
                 break;
             case 't':
@@ -40,21 +38,28 @@ uint8_t options(int argc, char *argv[]){
                 break;
                 }
     }
-    printf("%d\n", c);
-    printf("%d\n", opts);
     return opts;
 }
 
 int main(int argc, char *argv[]) {
-    uint8_t a;
-    a = options(argc, argv);
-    return 0;
-    int hidden, list, size, reverse = 0;
-    const char *path = "/data/data/com.termux/files/home/";
+    int list, size, reverse, all, inode, time, recursive = 0;
+    uint8_t one = 1;
+    uint8_t opts = options(argc, argv);
+
+    if((opts & (one << 0)) == 1) list = 1;
+    if((opts & (one << 1)) == 2) size = 1;
+    if((opts & (one << 2)) == 4) all = 1;
+    if((opts & (one << 3)) == 8) reverse = 1;
+    if((opts & (one << 4)) == 16) inode = 1;
+    if((opts & (one << 5)) == 32) time = 1;
+    if((opts & (one << 6)) == 64) recursive = 1;
+    /* printf("%d, %d, %d, %d, %d, %d, %d\n", list, size, all, reverse, inode, time, recursive); */
+
+    const char *path = "/home/hardal/";
     DIR *dirp = opendir(path);
     struct dirent *contents = readdir(dirp);
     while (contents != NULL){
-        if(hidden)
+        if(all)
             printf("%s\n", contents->d_name);
         else{
             if (contents->d_name[0] != '.')
