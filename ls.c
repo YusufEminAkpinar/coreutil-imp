@@ -13,8 +13,16 @@
 void parr(char *arr[], int num){
     for(int i=0; i<num; i++){
         printf("%s", arr[i]);
+        arr[i] = NULL;
     }
-    printf("\t");
+}
+
+int append(char *arr[], int var, int indicator){
+    char *list_str;
+    sprintf(list_str, "%d  ", var);
+    arr[indicator] = list_str;
+    indicator++;
+    return indicator;
 }
 
 
@@ -71,7 +79,8 @@ int main(int argc, char *argv[]) {
     if((opts & (one << 6)) == 64) recursive = 1;
     /* printf("%d, %d, %d, %d, %d, %d, %d\n", list, size, all, reverse, inode, time, recursive); */
 
-    const char *path = argv[argc-1];
+    /* const char *path = argv[argc-1]; */
+    const char *path = "/home/hardal/test";
     struct passwd *user;
     struct group *grup;
     char *filepath = malloc (1024);
@@ -81,36 +90,42 @@ int main(int argc, char *argv[]) {
         exit(0);
     }
     struct dirent *contents = readdir(dirp);
-    char *printed[5];
-    char *list_str, *inode_str;
-    int i;
+    char *printed[10];
+    char *inode_str;
+    int ind;
     int s;
     while (contents != NULL){
-        i=0;
+        ind=0;
         strcpy(filepath, path);
         strcat(filepath, contents->d_name);
         s = stat(filepath, &sb);
 
         if(inode == 1){
             sprintf(inode_str, "%lu\t", contents->d_ino);
-            printed[i] = inode_str;
-            i++;
-            printf("i is :%d\n", i);
+            printed[ind] = inode_str;
+            ind++;
+            /* printf("i is :%d\n", i); */
         }
         if(list == 1) {
             user = getpwuid(sb.st_uid);
             grup = getgrgid(sb.st_gid);
-            sprintf(list_str, "%d  %s  %s %d %lu\t", sb.st_mode, user->pw_name, grup->gr_name, sb.st_gid, sb.st_size);
-            printed[i] = list_str;
-            i++;
+            /* printf("%d %d %s %s\n", sb.st_mode, sb.st_gid, user->pw_name, grup->gr_name); */
+            ind = append(printed, sb.st_mode, ind);
+            ind = append(printed, sb.st_gid, ind);
+            printed[ind] = user->pw_name;
+            ind++;
+            printed[ind] = grup->gr_name;
+            ind++;
+            /* sprintf(list_str, "%d  %s  %s %d %lu\t", sb.st_mode, user->pw_name, grup->gr_name, sb.st_gid, sb.st_size); */
+            ind = append(printed, sb.st_size, ind);
         }
         if(all == 1) {
-            parr(printed, i);
+            parr(printed, ind);
             printf("%s\n", contents->d_name);
         }
         else{
             if (contents->d_name[0] != '.'){
-                parr(printed, i);
+                parr(printed, ind);
                 printf("%s\n", contents->d_name);
             }
         }
