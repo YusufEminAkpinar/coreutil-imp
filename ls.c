@@ -1,9 +1,22 @@
 #include <stdint.h>
 #include <stdio.h>
+#include <string.h>
 #include <unistd.h>
 #include <dirent.h>
 #include <stdlib.h>
-#include <argp.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <pwd.h>
+#include <grp.h>
+
+
+void parr(char *arr[], int num){
+    for(int i=0; i<num; i++){
+        printf("%s", arr[i]);
+    }
+    printf("\t");
+}
+
 
 // l     s    a     r      I    t      R
 // list size all reverse inode time recursive
@@ -42,6 +55,9 @@ uint8_t options(int argc, char *argv[]){
 }
 
 int main(int argc, char *argv[]) {
+
+    struct stat sb;
+
     int list, size, reverse, all, inode, time, recursive = 0;
     uint8_t one = 1;
     uint8_t opts = options(argc, argv);
@@ -55,17 +71,51 @@ int main(int argc, char *argv[]) {
     if((opts & (one << 6)) == 64) recursive = 1;
     /* printf("%d, %d, %d, %d, %d, %d, %d\n", list, size, all, reverse, inode, time, recursive); */
 
-    const char *path = "/home/hardal/";
+    const char *path = argv[argc-1];
+    struct passwd *user;
+    struct group *grup;
+    char *filepath = malloc (1024);
     DIR *dirp = opendir(path);
+    if (dirp == NULL) {
+        fprintf(stderr, "Failure on %s: No such file or directory.\n", path);
+        exit(0);
+    }
     struct dirent *contents = readdir(dirp);
+    char *printed[5];
+    char *list_str, *inode_str;
+    int i;
+    int s;
     while (contents != NULL){
-        if(all)
+        i=0;
+        strcpy(filepath, path);
+        strcat(filepath, contents->d_name);
+        s = stat(filepath, &sb);
+
+        if(inode == 1){
+            sprintf(inode_str, "%lu\t", contents->d_ino);
+            printed[i] = inode_str;
+            i++;
+            printf("i is :%d\n", i);
+        }
+        if(list == 1) {
+            user = getpwuid(sb.st_uid);
+            grup = getgrgid(sb.st_gid);
+            sprintf(list_str, "%d  %s  %s %d %lu\t", sb.st_mode, user->pw_name, grup->gr_name, sb.st_gid, sb.st_size);
+            printed[i] = list_str;
+            i++;
+        }
+        if(all == 1) {
+            parr(printed, i);
             printf("%s\n", contents->d_name);
+        }
         else{
-            if (contents->d_name[0] != '.')
+            if (contents->d_name[0] != '.'){
+                parr(printed, i);
                 printf("%s\n", contents->d_name);
+            }
         }
         contents = readdir(dirp);
     }
+    closedir(dirp);
     return 0;
 }
